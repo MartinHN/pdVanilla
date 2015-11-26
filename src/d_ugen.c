@@ -216,11 +216,11 @@ static void block_float(t_block *x, t_floatarg f)
 
 static void block_bang(t_block *x)
 {
-    if (x->x_switched && !x->x_switchon && pd_this->pd_dspchain)
+    if (x->x_switched && !x->x_switchon && pd_this()->pd_dspchain)
     {
         t_int *ip;
         x->x_return = 1;
-        for (ip = pd_this->pd_dspchain + x->x_chainonset; ip; )
+        for (ip = pd_this()->pd_dspchain + x->x_chainonset; ip; )
             ip = (*(t_perfroutine)(*ip))(ip);
         x->x_return = 0;
     }
@@ -297,40 +297,40 @@ static t_int dsp_done(t_int *w)
 
 void dsp_add(t_perfroutine f, int n, ...)
 {
-    int newsize = pd_this->pd_dspchainsize + n+1, i;
+    int newsize = pd_this()->pd_dspchainsize + n+1, i;
     va_list ap;
 
-    pd_this->pd_dspchain = t_resizebytes(pd_this->pd_dspchain, 
-        pd_this->pd_dspchainsize * sizeof (t_int), newsize * sizeof (t_int));
-    pd_this->pd_dspchain[pd_this->pd_dspchainsize-1] = (t_int)f;
+    pd_this()->pd_dspchain = t_resizebytes(pd_this()->pd_dspchain, 
+        pd_this()->pd_dspchainsize * sizeof (t_int), newsize * sizeof (t_int));
+    pd_this()->pd_dspchain[pd_this()->pd_dspchainsize-1] = (t_int)f;
     va_start(ap, n);
     for (i = 0; i < n; i++)
-        pd_this->pd_dspchain[pd_this->pd_dspchainsize + i] = va_arg(ap, t_int);
+        pd_this()->pd_dspchain[pd_this()->pd_dspchainsize + i] = va_arg(ap, t_int);
     va_end(ap);
-    pd_this->pd_dspchain[newsize-1] = (t_int)dsp_done;
-    pd_this->pd_dspchainsize = newsize;
+    pd_this()->pd_dspchain[newsize-1] = (t_int)dsp_done;
+    pd_this()->pd_dspchainsize = newsize;
 }
 
     /* at Guenter's suggestion, here's a vectorized version */
 void dsp_addv(t_perfroutine f, int n, t_int *vec)
 {
-    int newsize = pd_this->pd_dspchainsize + n+1, i;
+    int newsize = pd_this()->pd_dspchainsize + n+1, i;
     
-    pd_this->pd_dspchain = t_resizebytes(pd_this->pd_dspchain, 
-        pd_this->pd_dspchainsize * sizeof (t_int), newsize * sizeof (t_int));
-    pd_this->pd_dspchain[pd_this->pd_dspchainsize-1] = (t_int)f;
+    pd_this()->pd_dspchain = t_resizebytes(pd_this()->pd_dspchain, 
+        pd_this()->pd_dspchainsize * sizeof (t_int), newsize * sizeof (t_int));
+    pd_this()->pd_dspchain[pd_this()->pd_dspchainsize-1] = (t_int)f;
     for (i = 0; i < n; i++)
-        pd_this->pd_dspchain[pd_this->pd_dspchainsize + i] = vec[i];
-    pd_this->pd_dspchain[newsize-1] = (t_int)dsp_done;
-    pd_this->pd_dspchainsize = newsize;
+        pd_this()->pd_dspchain[pd_this()->pd_dspchainsize + i] = vec[i];
+    pd_this()->pd_dspchain[newsize-1] = (t_int)dsp_done;
+    pd_this()->pd_dspchainsize = newsize;
 }
 
 void dsp_tick(void)
 {
-    if (pd_this->pd_dspchain)
+    if (pd_this()->pd_dspchain)
     {
         t_int *ip;
-        for (ip = pd_this->pd_dspchain; ip; ) ip = (*(t_perfroutine)(*ip))(ip);
+        for (ip = pd_this()->pd_dspchain; ip; ) ip = (*(t_perfroutine)(*ip))(ip);
         dsp_phase++;
     }
 }
@@ -359,9 +359,9 @@ void signal_cleanup(void)
 {
     t_signal **svec, *sig, *sig2;
     int i;
-    while (sig = pd_this->pd_signals)
+    while (sig = pd_this()->pd_signals)
     {
-        pd_this->pd_signals = sig->s_nextused;
+        pd_this()->pd_signals = sig->s_nextused;
         if (!sig->s_isborrowed)
             t_freebytes(sig->s_vec, sig->s_vecsize * sizeof (*sig->s_vec));
         t_freebytes(sig, sizeof *sig);
@@ -456,8 +456,8 @@ t_signal *signal_new(int n, t_float sr)
             ret->s_vec = 0;
             ret->s_isborrowed = 1;
         }
-        ret->s_nextused = pd_this->pd_signals;
-        pd_this->pd_signals = ret;
+        ret->s_nextused = pd_this()->pd_signals;
+        pd_this()->pd_signals = ret;
     }
     ret->s_n = n;
     ret->s_vecsize = vecsize;
@@ -552,11 +552,11 @@ void ugen_stop(void)
 {
     t_signal *s;
     int i;
-    if (pd_this->pd_dspchain)
+    if (pd_this()->pd_dspchain)
     {
-        freebytes(pd_this->pd_dspchain, 
-            pd_this->pd_dspchainsize * sizeof (t_int));
-        pd_this->pd_dspchain = 0;
+        freebytes(pd_this()->pd_dspchain, 
+            pd_this()->pd_dspchainsize * sizeof (t_int));
+        pd_this()->pd_dspchain = 0;
     }
     signal_cleanup();
     
@@ -566,9 +566,9 @@ void ugen_start(void)
 {
     ugen_stop();
     ugen_sortno++;
-    pd_this->pd_dspchain = (t_int *)getbytes(sizeof(*pd_this->pd_dspchain));
-    pd_this->pd_dspchain[0] = (t_int)dsp_done;
-    pd_this->pd_dspchainsize = 1;
+    pd_this()->pd_dspchain = (t_int *)getbytes(sizeof(*pd_this()->pd_dspchain));
+    pd_this()->pd_dspchain[0] = (t_int)dsp_done;
+    pd_this()->pd_dspchainsize = 1;
     if (ugen_currentcontext) bug("ugen_start");
 }
 
@@ -582,7 +582,7 @@ void glob_foo(void *dummy, t_symbol *s, int argc, t_atom *argv)
 {
     int i, count;
     t_signal *sig;
-    for (count = 0, sig = pd_this->pd_signals; sig;
+    for (count = 0, sig = pd_this()->pd_signals; sig;
         count++, sig = sig->s_nextused)
             ;
     post("used signals %d", count);
@@ -1018,12 +1018,12 @@ void ugen_done_graph(t_dspcontext *dc)
                 outsigs, vecsize, calcsize, dsp_phase, period, frequency,
                     downsample, upsample, reblock, switched);
     }    
-    chainblockbegin = pd_this->pd_dspchainsize;
+    chainblockbegin = pd_this()->pd_dspchainsize;
 
     if (blk && (reblock || switched))   /* add the block DSP prolog */
     {
         dsp_add(block_prolog, 1, blk);
-        blk->x_chainonset = pd_this->pd_dspchainsize - 1;
+        blk->x_chainonset = pd_this()->pd_dspchainsize - 1;
     }   
         /* Initialize for sorting */
     for (u = dc->dc_ugenlist; u; u = u->u_next)
@@ -1078,7 +1078,7 @@ void ugen_done_graph(t_dspcontext *dc)
 
     if (blk && (reblock || switched))    /* add block DSP epilog */
         dsp_add(block_epilog, 1, blk);
-    chainblockend = pd_this->pd_dspchainsize;
+    chainblockend = pd_this()->pd_dspchainsize;
 
         /* add epilogs for outlets.  */
 
@@ -1095,7 +1095,7 @@ void ugen_done_graph(t_dspcontext *dc)
         }
     }
 
-    chainafterall = pd_this->pd_dspchainsize;
+    chainafterall = pd_this()->pd_dspchainsize;
     if (blk)
     {
         blk->x_blocklength = chainblockend - chainblockbegin;
@@ -1107,7 +1107,7 @@ void ugen_done_graph(t_dspcontext *dc)
     {
         t_int *ip;
         if (!dc->dc_parentcontext)
-            for (i = pd_this->pd_dspchainsize, ip = pd_this->pd_dspchain; 
+            for (i = pd_this()->pd_dspchainsize, ip = pd_this()->pd_dspchain;
                 i--; ip++)
                     post("chain %lx", *ip);
         post("... ugen_done_graph done.");

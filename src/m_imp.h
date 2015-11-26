@@ -75,7 +75,7 @@ struct _pdinstance
     t_symbol *pd_midirealtimein_sym;
 };
 
-extern t_pdinstance *pd_this;
+extern t_pdinstance *pd_this();
 
 /* m_class.c */
 EXTERN void pd_emptylist(t_pd *x);

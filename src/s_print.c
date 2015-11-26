@@ -238,6 +238,10 @@ void pd_error(void *object, const char *fmt, ...)
     va_start(ap, fmt);
     vsnprintf(buf, MAXPDSTRING-1, fmt, ap);
     va_end(ap);
+    if(object){
+    strcat(buf, " : obj : ");
+    strcat(buf,class_getname(((t_gobj*)object)->g_pd));
+    }
     strcat(buf, "\n");
 
     doerror(object, buf);

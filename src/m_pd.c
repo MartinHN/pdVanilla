@@ -293,7 +293,46 @@ void conf_init(void);
 void glob_init(void);
 void garray_init(void);
 
-t_pdinstance *pd_this;
+t_pdinstance ** pd_this1;
+typedef  int PdInstanceId;
+PdInstanceId * pdInstanceIds;
+int pdNumInstances = 0;
+#include <unistd.h>
+#include <stdio.h>
+#include <pthread.h>
+
+t_pdinstance ** findForId(PdInstanceId id){
+    for(int i = 0 ; i < pdNumInstances ; i++){
+        if(pdInstanceIds[i] == id)
+        {return pd_this1 +i;}
+    }
+    
+    return NULL;
+}
+void setInstanceForProcess(t_pdinstance * t){
+    t_pdinstance ** existing=findForId(pthread_self());
+    if(existing !=NULL){
+        *existing = t;
+//        printf("existing process %d for %d",t,pthread_self());
+    }
+    else{
+        
+        printf("adding process %d for %d , found %d \n",pthread_self(),t,existing);
+        pdInstanceIds = (PdInstanceId * )realloc(pdInstanceIds,(pdNumInstances++)*sizeof(pdInstanceIds));
+        pd_this1 = ( t_pdinstance ** ) realloc(pd_this1,pdNumInstances*sizeof(t_pdinstance*));
+        pdInstanceIds[pdNumInstances-1] = pthread_self();
+        pd_this1[pdNumInstances-1] = t;
+    }
+    
+}
+t_pdinstance * pd_this(){
+    t_pdinstance * res = *findForId(pthread_self());
+    if(res == NULL){
+        printf("no pd this");
+        
+    }
+    return res;
+};
 
 static t_symbol *midi_gensym(const char *prefix, const char *name)
 {
@@ -336,8 +375,8 @@ EXTERN t_pdinstance *pdinstance_new(void)
 
 void pd_init(void)
 {
-    if (!pd_this)
-        pd_this = pdinstance_donew(0);
+    if (pdNumInstances==0)
+        setInstanceForProcess( pdinstance_donew(0));
     mess_init();
     obj_init();
     conf_init();
@@ -347,7 +386,7 @@ void pd_init(void)
 
 EXTERN void pd_setinstance(t_pdinstance *x)
 {
-    pd_this = x;
+    setInstanceForProcess( x);
 }
 
 EXTERN void pdinstance_free(t_pdinstance *x)
@@ -357,11 +396,11 @@ EXTERN void pdinstance_free(t_pdinstance *x)
 
 EXTERN t_canvas *pd_getcanvaslist(void)
 {
-    return (pd_this->pd_canvaslist);
+    return (pd_this()->pd_canvaslist);
 }
 
 EXTERN int pd_getdspstate(void)
 {
-    return (pd_this->pd_dspstate);
+    return (pd_this()->pd_dspstate);
 }
 
