@@ -18,7 +18,7 @@ extern t_pd *newest;    /* OK - this should go into a .h file now :) */
 
 #ifdef HAVE_ALLOCA_H        /* ifdef nonsense to find include for alloca() */
 # include <alloca.h>        /* linux, mac, mingw, cygwin */
-#elif defined _MSC_VER
+#elif defined _MSC_VER || defined(__MINGW32__) 
 # include <malloc.h>        /* MSVC */
 #else
 # include <stddef.h>        /* BSDs for example */

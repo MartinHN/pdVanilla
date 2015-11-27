@@ -643,7 +643,7 @@ void sys_vgui(char *fmt, ...)
 {
     int msglen, bytesleft, headwas, nwrote;
     va_list ap;
-
+    
     if (sys_nogui)
         return;
     if (!sys_guibuf)

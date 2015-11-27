@@ -293,17 +293,19 @@ void conf_init(void);
 void glob_init(void);
 void garray_init(void);
 
+
+#include <pthread.h>
 t_pdinstance ** pd_this1;
-typedef  int PdInstanceId;
+typedef  pthread_t PdInstanceId;
 PdInstanceId * pdInstanceIds;
 int pdNumInstances = 0;
-#include <unistd.h>
-#include <stdio.h>
-#include <pthread.h>
+//#include <unistd.h>
+//#include <stdio.h>
+
 
 t_pdinstance ** findForId(PdInstanceId id){
     for(int i = 0 ; i < pdNumInstances ; i++){
-        if(pdInstanceIds[i] == id)
+        if(pthread_equal(pdInstanceIds[i], id))
         {return pd_this1 +i;}
     }
     
