@@ -295,20 +295,27 @@ void garray_init(void);
 
 
 #include <pthread.h>
-t_pdinstance ** pd_this1;
+
+#define MAX_PD_THREAD_INSTANCE 20
+t_pdinstance * pd_this1[MAX_PD_THREAD_INSTANCE];
 typedef  pthread_t PdInstanceId;
-PdInstanceId * pdInstanceIds;
+PdInstanceId  pdInstanceIds[MAX_PD_THREAD_INSTANCE];
 int pdNumInstances = 0;
+//static pthread_mutex_t mutex  = PTHREAD_MUTEX_INITIALIZER;
 //#include <unistd.h>
 //#include <stdio.h>
 
 
 t_pdinstance ** findForId(PdInstanceId id){
+//    pthread_mutex_lock(&mutex);
     for(int i = 0 ; i < pdNumInstances ; i++){
         if(pthread_equal(pdInstanceIds[i], id))
-        {return pd_this1 +i;}
+        {
+//            pthread_mutex_unlock(&mutex);
+            return pd_this1 +i;
+        }
     }
-    
+//    pthread_mutex_unlock(&mutex);
     return NULL;
 }
 void setInstanceForProcess(t_pdinstance * t){
@@ -318,12 +325,20 @@ void setInstanceForProcess(t_pdinstance * t){
 //        printf("existing process %d for %d",t,pthread_self());
     }
     else{
-        
+//        pthread_mutex_lock(&mutex);
         printf("adding process %d for %d , found %d \n",pthread_self(),t,existing);
-        pdInstanceIds = (PdInstanceId * )realloc(pdInstanceIds,(pdNumInstances++)*sizeof(pdInstanceIds));
-        pd_this1 = ( t_pdinstance ** ) realloc(pd_this1,pdNumInstances*sizeof(t_pdinstance*));
-        pdInstanceIds[pdNumInstances-1] = pthread_self();
-        pd_this1[pdNumInstances-1] = t;
+//        pdInstanceIds = (PdInstanceId * )realloc(pdInstanceIds,(pdNumInstances++)*sizeof(pdInstanceIds));
+//        pd_this1 = ( t_pdinstance ** ) realloc(pd_this1,pdNumInstances*sizeof(t_pdinstance*));
+        if(pdNumInstances < MAX_PD_THREAD_INSTANCE){
+        pdInstanceIds[pdNumInstances] = pthread_self();
+        pd_this1[pdNumInstances] = t;
+            pdNumInstances++;
+        }
+        else{
+            printf("max instance reached");
+            
+        }
+//        pthread_mutex_unlock(&mutex);
     }
     
 }
